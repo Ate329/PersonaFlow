@@ -1,0 +1,16 @@
+# Core dependencies
+torch
+transformers
+accelerate
+
+# Testing and Development
+pytest
+pytest-cov
+pytest-xdist  # for parallel testing
+black
+mypy
+isort
+flake8
+
+# Optional: LLM optimization
+bitsandbytes   # for 4-bit quantization
