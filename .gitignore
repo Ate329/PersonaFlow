@@ -3,6 +3,7 @@
 personaflow.egg-info/
 model_offload/
 __pycache__/
+.mypy_cache
 
 .devenv*
 devenv.local.nix
