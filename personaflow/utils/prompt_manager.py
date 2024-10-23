@@ -1,14 +1,16 @@
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any
 from string import Template
 from .validators import validate_prompt_template
 
+
 class PromptTemplate:
-    def __init__(self, template: str):
+    def __init__(self, template: str) -> None:
         self.template = Template(template)
 
-    def format(self, **kwargs) -> str:
+    def format(self, **kwargs: Any) -> str:
         """Format the template with given variables"""
         return self.template.safe_substitute(**kwargs)
+
 
 class PromptManager:
     def __init__(self):
@@ -34,7 +36,7 @@ class PromptManager:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, str]) -> 'PromptManager':
+    def from_dict(cls, data: Dict[str, str]) -> "PromptManager":
         """Create PromptManager from dictionary"""
         manager = cls()
         for name, template in data.items():
