@@ -6,7 +6,7 @@ from personaflow.core.system import PersonaSystem
 class TestLLMIntegration:
     @pytest.fixture(scope="module")
     def llm(self):
-        model_name = "microsoft/Phi-3.5-mini-instruct"
+        model_name = "nvidia/Nemotron-Mini-4B-Instruct"
         tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         # Create offload directory if it doesn't exist
