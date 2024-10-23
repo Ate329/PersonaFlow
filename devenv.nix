@@ -1,10 +1,19 @@
-{ pkgs, ... }:
-
 {
+  pkgs, ...
+}: {
   packages = with pkgs; [
     python312
     python312Packages.pip
-    stdenv.cc.cc.lib
+    python312Packages.torch
+    python312Packages.transformers
+    python312Packages.accelerate
+    python312Packages.pytest
+    python312Packages.pytest-cov
+    python312Packages.pytest-xdist
+    python312Packages.black
+    python312Packages.mypy
+    python312Packages.flake8
+    python312Packages.bitsandbytes
     pre-commit
     git
   ];
@@ -12,17 +21,11 @@
   languages.python = {
     enable = true;
     version = "3.12";
-    venv.enable = true;
+    venv.enable = true; # Option to enable virtualenv (devenv will handle it)
   };
 
+  # Extra shell setup if necessary
   enterShell = ''
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install torch
-    pip install "transformers>=4.45.0"
-    pip install accelerate
-    pip install pytest pytest-cov pytest-xdist
-    pip install black mypy flake8
-    pip install bitsandbytes
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
   '';
 }
