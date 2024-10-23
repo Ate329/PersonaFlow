@@ -4,6 +4,7 @@
   packages = with pkgs; [
     python312
     python312Packages.pip
+    pre-commit
     git
   ];
 
@@ -20,7 +21,7 @@
     pip install "transformers>=4.45.0"
     pip install accelerate
     pip install pytest pytest-cov pytest-xdist
-    pip install black mypy isort flake8
+    pip install black mypy flake8
     pip install bitsandbytes
   '';
 }

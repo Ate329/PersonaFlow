@@ -12,4 +12,4 @@ devenv.local.nix
 .direnv
 
 # pre-commit
-.pre-commit-config.yaml
+# .pre-commit-config.yaml
