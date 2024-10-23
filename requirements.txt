@@ -9,7 +9,6 @@ pytest-cov
 pytest-xdist  # for parallel testing
 black
 mypy
-isort
 flake8
 
 # Optional: LLM optimization

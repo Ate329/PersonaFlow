@@ -4,6 +4,7 @@
   packages = with pkgs; [
     python312
     python312Packages.pip
+    stdenv.cc.cc.lib
     pre-commit
     git
   ];
