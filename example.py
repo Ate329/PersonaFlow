@@ -1,221 +1,200 @@
-import gc
-import os
-
 import torch
+import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from personaflow.core import PersonaSystem
 from personaflow.utils import PromptManager
 
 
-def clear_memory():
-    """Clear memory and garbage collection"""
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-
-
 def setup_model(use_gpu=False):
-    """
-    Initialize the model with optimizations
-    Args:
-        use_gpu: Boolean to force GPU usage if available
-    """
     model_name = "nvidia/Nemotron-Mini-4B-Instruct"
 
     # Determine device
     if use_gpu and torch.cuda.is_available():
         device = "cuda"
-        device_map = None
+        device_map = None  # Will use single GPU
+        print("Using GPU")
     else:
         device = "cpu"
-        device_map = "auto"
-
-    print(f"Using device: {device}")
-
-    # Load tokenizer with optimizations
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name, use_fast=True, model_max_length=2048
-    )
+        device_map = "auto"  # Will distribute across available devices
+        print("Using CPU")
 
     # Create offload directory if needed
     offload_folder = "model_offload"
     os.makedirs(offload_folder, exist_ok=True)
+    print(f"Using offload folder: {offload_folder}")
 
-    # Load model with CPU optimizations
+    print("Loading tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    print("Loading model...")
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype="auto",
         device_map=device_map,
         offload_folder=offload_folder,
-        use_cache=True,
         low_cpu_mem_usage=True,
     )
 
     if device == "cuda":
         model = model.to(device)
 
-    # Enable model optimizations
-    model.config.use_cache = True
-
-    # Warmup run
-    print("Performing warmup inference...")
-    _ = generate_response(model, tokenizer, "Hello")
-    clear_memory()
-
     return model, tokenizer
 
 
-def generate_response(model, tokenizer, prompt, max_length=2048):
-    """Generate a response with optimized parameters"""
-    inputs = tokenizer(
-        prompt, return_tensors="pt", truncation=True, max_length=2048, padding=False
-    ).to(model.device)
+def generate_response(model, tokenizer, prompt):
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
     with torch.inference_mode():
         outputs = model.generate(
             **inputs,
-            max_length=max_length,
-            min_length=32,
+            max_length=2048,
             temperature=0.7,
             top_p=0.9,
             do_sample=True,
             pad_token_id=tokenizer.eos_token_id,
-            use_cache=True,
             repetition_penalty=1.1,
         )
 
-    response = tokenizer.decode(
-        outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    return response
-
-
-def generate_batch_responses(model, tokenizer, prompts, max_length=2048):
-    """Generate responses for multiple prompts in batch"""
-    inputs = tokenizer(
-        prompts, return_tensors="pt", padding=True, truncation=True, max_length=2048
-    ).to(model.device)
-
-    with torch.inference_mode():
-        outputs = model.generate(
-            **inputs, max_length=max_length, num_return_sequences=len(prompts)
-        )
-
-    return [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
-
-
-# Cache for prompt templates
-cached_prompts = {}
-
-
-def get_cached_prompt(prompt_manager, template_name, **kwargs):
-    """Get or create cached prompt template"""
-    cache_key = f"{template_name}_{hash(frozenset(kwargs.items()))}"
-    if cache_key not in cached_prompts:
-        cached_prompts[cache_key] = prompt_manager.get_prompt(template_name, **kwargs)
-    return cached_prompts[cache_key]
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
 def main(use_gpu=False):
-    # Initialize the model and tokenizer
+    # Initialize model and tokenizer
     model, tokenizer = setup_model(use_gpu)
 
-    # Initialize the PersonaSystem
+    # Initialize PersonaSystem
     system = PersonaSystem()
 
-    # Create a PromptManager and add templates
+    # Create prompt templates
     prompt_manager = PromptManager()
-    detective_template = """You are ${name}, a brilliant detective known for ${traits}.
-    Background: ${background}
-    Current case: ${current_case}
 
-    Previous context: ${context}
-
-    Human: ${user_input}
-    Detective ${name}:"""
-
-    prompt_manager.add_template("detective", detective_template)
-
-    # Create initial detective prompt
-    detective_prompt = get_cached_prompt(
-        prompt_manager,
+    # Add detective template
+    prompt_manager.add_template(
         "detective",
-        name="Sherlock Holmes",
-        traits="exceptional deductive reasoning and keen observation",
-        background="Consulting detective based in London, 221B Baker Street",
-        current_case="The mysterious disappearance of Lord Blackwood's prized emerald",
-        context="",
-        user_input="",
+        """You are ${name}, a brilliant detective known for ${traits}.
+        Background: ${background}
+        Current case: ${current_case}
+
+        Previous context: ${context}
+        Human: ${user_input}
+        Detective ${name}:""",
     )
 
-    # Create detective character
-    detective = system.create_character(
+    # Add doctor template
+    prompt_manager.add_template(
+        "doctor",
+        """You are ${name}, a medical doctor specialized in ${specialty}.
+        Background: ${background}
+        Current patient: ${current_patient}
+
+        Previous context: ${context}
+        Human: ${user_input}
+        Dr. ${name}:""",
+    )
+
+    # Create characters
+    system.create_character(
         name="Sherlock Holmes",
-        prompt=detective_prompt,
+        prompt=prompt_manager.get_prompt(
+            "detective",
+            name="Sherlock Holmes",
+            traits="exceptional deductive reasoning",
+            background="Consulting detective from London",
+            current_case="The mysterious emerald theft",
+            context="",
+            user_input="",
+        ),
         background={
-            "traits": "exceptional deductive reasoning and keen observation",
-            "background": "Consulting detective based in London, 221B Baker Street",
-            "current_case": "The mysterious disappearance of Lord Blackwood's prized emerald",
-        },
-        memory_config={
-            "max_memories": 5,
-            "summary_threshold": 3,
-            "auto_summarize": True,
+            "traits": "exceptional deductive reasoning",
+            "background": "Consulting detective from London",
+            "current_case": "The mysterious emerald theft",
         },
     )
 
-    # Simulate a conversation
-    conversations = [
-        "I found a green fabric thread at the crime scene. What do you make of it?",
-        "The butler mentioned seeing a tall figure in the garden at midnight.",
-        "Lord Blackwood's diary shows he was meeting someone in secret.",
-    ]
+    system.create_character(
+        name="Dr. Watson",
+        prompt=prompt_manager.get_prompt(
+            "doctor",
+            name="John Watson",
+            specialty="military medicine",
+            background="Army doctor and detective's assistant",
+            current_patient="None at the moment",
+            context="",
+            user_input="",
+        ),
+        background={
+            "specialty": "military medicine",
+            "background": "Army doctor and detective's assistant",
+            "current_patient": "None at the moment",
+        },
+    )
 
-    try:
-        for user_input in conversations:
-            # Get character context
-            context = detective.get_context(include_memories=True, memory_limit=3)
+    # Main conversation loop
+    current_character = "Sherlock Holmes"
+    system.switch_active_character(current_character)
 
-            # Format the prompt using cache
-            formatted_prompt = get_cached_prompt(
-                prompt_manager,
-                "detective",
-                name=detective.name,
-                traits=context["background"]["traits"],
-                background=context["background"]["background"],
-                current_case=context["background"]["current_case"],
-                context=str(context.get("memories", [])),
-                user_input=user_input,
+    print("\nCommands:")
+    print("- Type 'switch' to change characters")
+    print("- Type 'quit' to exit")
+    print(f"\nCurrently speaking with: {current_character}")
+
+    while True:
+        user_input = input("\nYou: ").strip()
+
+        if user_input.lower() == "quit":
+            break
+
+        if user_input.lower() == "switch":
+            # Toggle between characters
+            current_character = (
+                "Dr. Watson"
+                if current_character == "Sherlock Holmes"
+                else "Sherlock Holmes"
             )
+            system.switch_active_character(current_character)
+            print(f"\nSwitched to: {current_character}")
+            continue
 
-            # Generate response
-            response = generate_response(model, tokenizer, formatted_prompt)
+        # Get current character
+        character = system.get_character(current_character)
+        context = character.get_context(include_memories=True, memory_limit=5)
 
-            # Add the interaction to memory
-            detective.add_memory(
-                content={"user": user_input, "response": response},
-                memory_type="interaction",
-            )
+        # Format prompt based on character type
+        template_name = "doctor" if current_character == "Dr. Watson" else "detective"
+        formatted_prompt = prompt_manager.get_prompt(
+            template_name,
+            **context["background"],
+            name=character.name,
+            context=str(context.get("memories", [])),
+            user_input=user_input,
+        )
 
-            # Print the conversation
-            print(f"\nHuman: {user_input}")
-            print(f"Sherlock: {response}\n")
-            print("-" * 50)
+        # Generate and print response
+        response = generate_response(model, tokenizer, formatted_prompt)
+        print(f"\n{current_character}: {response}")
 
-            # Clear memory periodically
-            clear_memory()
-
-    except KeyboardInterrupt:
-        print("\nGracefully shutting down...")
-    finally:
-        # Final cleanup
-        clear_memory()
+        # Add to character's memory
+        character.add_memory(
+            content={"user": user_input, "response": response},
+            memory_type="interaction",
+        )
 
 
 if __name__ == "__main__":
-    # For CPU-only systems
-    main(use_gpu=False)
+    # Check if CUDA is available
+    if torch.cuda.is_available():
+        print("\nNVIDIA GPU detected!")
+        use_gpu = input("Would you like to use GPU? (y/n): ").lower().startswith("y")
+    else:
+        print("\nNo NVIDIA GPU detected, using CPU")
+        use_gpu = False
 
-    # For NVIDIA GPU systems, uncomment the following line instead:
-    # main(use_gpu=True)
+    try:
+        main(use_gpu)
+    except KeyboardInterrupt:
+        print("\nGracefully shutting down...")
+    finally:
+        # Clean up
+        if os.path.exists("model_offload"):
+            print("\nNOTE: The 'model_offload' folder contains temporary files.")
+            print("You can safely delete it if you're not planning to reuse it.")
