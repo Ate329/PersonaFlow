@@ -2,6 +2,8 @@ import pytest
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from personaflow.core.system import PersonaSystem
+from personaflow.utils import PromptManager
+
 
 class TestLLMIntegration:
     @pytest.fixture(scope="module")
@@ -19,7 +21,7 @@ class TestLLMIntegration:
             device_map="auto",
             offload_folder=offload_folder,
             low_cpu_mem_usage=True,
-            torch_dtype="auto"
+            torch_dtype="auto",
         )
         return model, tokenizer
 
@@ -27,62 +29,91 @@ class TestLLMIntegration:
     def system(self):
         return PersonaSystem()
 
+    @pytest.fixture
+    def prompt_manager(self):
+        manager = PromptManager()
+        manager.add_template(
+            "merchant",
+            """You are ${name}, a ${occupation} known for ${personality}.
+            Background: ${background}
+            Inventory: ${inventory}
+
+            Previous context: ${context}
+            Human: ${user_input}
+            ${name}:""",
+        )
+
+        manager.add_template(
+            "guard",
+            """You are ${name}, a ${occupation} who is ${personality}.
+            Background: ${background}
+
+            Previous context: ${context}
+            Human: ${user_input}
+            Guard ${name}:""",
+        )
+
+        manager.add_template(
+            "innkeeper",
+            """You are ${name}, an ${occupation} who is ${personality}.
+            Background: ${background}
+
+            Previous context: ${context}
+            Human: ${user_input}
+            Innkeeper ${name}:""",
+        )
+        return manager
+
     def generate_response(self, llm, prompt: str) -> str:
         model, tokenizer = llm
+        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
-        inputs = tokenizer(prompt, return_tensors="pt")
-
-        # Generate with optimized settings for NPU
         outputs = model.generate(
-            **inputs,
-            max_length=200,
-            temperature=0.7,
-            top_p=0.9,
-            pad_token_id=tokenizer.eos_token_id,
-            num_return_sequences=1,
-            use_cache=True,
-            do_sample=True
+            **inputs, max_length=2048, temperature=0.7, top_p=0.9, do_sample=True
         )
 
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
+        return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    def test_basic_character_interaction(self, llm, system):
+    def test_basic_character_interaction(self, llm, system, prompt_manager):
         # Create a test character
-        character = system.create_character(
-            name="merchant",
-            prompt="""You are a friendly merchant in a medieval fantasy town.
-                     You sell weapons and armor. You are known for fair prices.""",
+        system.create_character(
+            name="Tom the Merchant",
+            prompt=prompt_manager.get_prompt(
+                "merchant",
+                name="Tom",
+                occupation="merchant",
+                personality="fair prices and friendly service",
+                background="Running the shop for 20 years",
+                inventory="swords, shields, and armor",
+                context="",
+                user_input="",
+            ),
             background={
-                "name": "Tom",
-                "occupation": "Merchant",
-                "personality": "Friendly and helpful",
-                "inventory": ["swords", "shields", "armor"]
-            }
+                "occupation": "merchant",
+                "personality": "fair prices and friendly service",
+                "background": "Running the shop for 20 years",
+                "inventory": "swords, shields, and armor",
+            },
         )
 
-        # Get character context
+        # Get character and context
+        character = system.get_character("Tom the Merchant")
         context = character.get_context()
 
-        # Create full prompt with proper instruction format
-        prompt = f"""<s>[INST] You are a merchant named Tom. Here is your context:
-{context}
+        # Create prompt and generate response
+        formatted_prompt = prompt_manager.get_prompt(
+            "merchant",
+            **context["background"],
+            name="Tom",
+            context=str(context.get("memories", [])),
+            user_input="How much for that sword?"
+        )
 
-A customer asks: "How much for that sword?"
+        response = self.generate_response(llm, formatted_prompt)
 
-Respond in character, considering your background and personality.
-[/INST]"""
-
-        # Generate response
-        response = self.generate_response(llm, prompt)
-
-        # Add interaction to character memory
-        system.add_interaction(
-            character_name="merchant",
-            content={
-                "user": "How much for that sword?",
-                "response": response
-            }
+        # Add interaction to memory
+        character.add_memory(
+            content={"user": "How much for that sword?", "response": response}
         )
 
         # Verify memory was added
@@ -90,60 +121,86 @@ Respond in character, considering your background and personality.
         assert len(updated_context["memories"]) == 1
 
     @pytest.mark.parametrize("prompt_type", ["friendly", "hostile"])
-    def test_different_interaction_types(self, llm, system, prompt_type):
-        # Test how character responds to different types of interactions
-        character = system.create_character(
-            name="guard",
-            prompt="You are a town guard in a medieval fantasy town.",
+    def test_different_interaction_types(
+        self, llm, system, prompt_manager, prompt_type
+    ):
+        # Create guard character
+        system.create_character(
+            name="John the Guard",
+            prompt=prompt_manager.get_prompt(
+                "guard",
+                name="John",
+                occupation="town guard",
+                personality="professional and dutiful",
+                background="Serving the town for 5 years",
+                context="",
+                user_input="",
+            ),
             background={
-                "name": "John",
-                "occupation": "Guard",
-                "personality": "Professional and dutiful"
-            }
+                "occupation": "town guard",
+                "personality": "professional and dutiful",
+                "background": "Serving the town for 5 years",
+            },
         )
 
         prompts = {
             "friendly": "Good evening guard, lovely weather we're having.",
-            "hostile": "Get out of my way, guard!"
+            "hostile": "Get out of my way, guard!",
         }
 
+        character = system.get_character("John the Guard")
         context = character.get_context()
-        prompt = f"""<s>[INST] Based on this context:
-{context}
 
-Respond to: "{prompts[prompt_type]}"
-[/INST]"""
+        formatted_prompt = prompt_manager.get_prompt(
+            "guard",
+            **context["background"],
+            name="John",
+            context=str(context.get("memories", [])),
+            user_input=prompts[prompt_type]
+        )
 
-        response = self.generate_response(llm, prompt)
+        response = self.generate_response(llm, formatted_prompt)
         assert len(response) > 0
 
-    def test_memory_influence(self, llm, system):
-        # Test how previous interactions influence responses
-        character = system.create_character(
-            name="innkeeper",
-            prompt="You are an innkeeper in a medieval fantasy town.",
+    def test_memory_influence(self, llm, system, prompt_manager):
+        # Create innkeeper character
+        system.create_character(
+            name="Mary the Innkeeper",
+            prompt=prompt_manager.get_prompt(
+                "innkeeper",
+                name="Mary",
+                occupation="innkeeper",
+                personality="observant and chatty",
+                background="Running the Blue Dragon Inn",
+                context="",
+                user_input="",
+            ),
             background={
-                "name": "Mary",
-                "occupation": "Innkeeper",
-                "personality": "Observant and chatty"
-            }
+                "occupation": "innkeeper",
+                "personality": "observant and chatty",
+                "background": "Running the Blue Dragon Inn",
+            },
         )
 
-        # Add some initial memories
-        system.add_interaction(
-            character_name="innkeeper",
+        character = system.get_character("Mary the Innkeeper")
+
+        # Add initial memory
+        character.add_memory(
             content={
                 "user": "Have you seen any interesting travelers lately?",
-                "response": "Yes, a group of dwarven merchants stayed here last night."
+                "response": "Yes, a group of dwarven merchants stayed here last night.",
             }
         )
 
+        # Test response with memory context
         context = character.get_context()
-        prompt = f"""<s>[INST] Based on this context:
-{context}
+        formatted_prompt = prompt_manager.get_prompt(
+            "innkeeper",
+            **context["background"],
+            name="Mary",
+            context=str(context.get("memories", [])),
+            user_input="Tell me more about those dwarven merchants."
+        )
 
-Respond to: "Tell me more about those dwarven merchants."
-[/INST]"""
-
-        response = self.generate_response(llm, prompt)
+        response = self.generate_response(llm, formatted_prompt)
         assert len(response) > 0

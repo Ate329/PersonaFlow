@@ -21,7 +21,7 @@
   languages.python = {
     enable = true;
     version = "3.12";
-    venv.enable = true; # Option to enable virtualenv (devenv will handle it)
+    venv.enable = true;
   };
 
   # Extra shell setup if necessary
