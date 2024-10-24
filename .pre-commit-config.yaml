@@ -24,3 +24,12 @@ repos:
     rev: v1.5.1
     hooks:
     -   id: mypy
+
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
+    hooks:
+    -   id: autoflake
+        args:
+        - --remove-all-unused-imports
+        - --remove-unused-variables
+        - --expand-star-imports

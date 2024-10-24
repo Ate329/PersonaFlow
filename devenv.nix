@@ -14,6 +14,7 @@
     python312Packages.mypy
     python312Packages.flake8
     python312Packages.bitsandbytes
+    python312Packages.autoflake
     pre-commit
     git
   ];
@@ -24,7 +25,28 @@
     venv.enable = true;
   };
 
-  # Extra shell setup if necessary
+  pre-commit.hooks = {
+    end-of-file-fixer.enable = true;
+    trailing-whitespace.enable = true;
+    check-yaml.enable = true;
+    check-json.enable = true;
+    debug-statements.enable = true;
+    black.enable = true;
+    flake8 = {
+      enable = true;
+      args = ["--max-line-length=100"];
+    };
+    mypy.enable = true;
+    autoflake = {
+      enable = true;
+      args = [
+        "--remove-all-unused-imports"
+        "--remove-unused-variables"
+        "--expand-star-imports"
+      ];
+    };
+  };
+
   enterShell = ''
     export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
   '';
