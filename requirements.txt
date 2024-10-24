@@ -10,6 +10,7 @@ pytest-xdist  # for parallel testing
 black
 mypy
 flake8
+autoflake
 
 # Optional: LLM optimization
 bitsandbytes   # for 4-bit quantization

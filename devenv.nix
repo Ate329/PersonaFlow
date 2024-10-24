@@ -31,6 +31,7 @@
     check-yaml.enable = true;
     check-json.enable = true;
     debug-statements.enable = true;
+    commitizen.enable = true;
     black.enable = true;
     flake8 = {
       enable = true;
