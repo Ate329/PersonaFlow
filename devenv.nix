@@ -1,6 +1,5 @@
+{ pkgs, ... }:
 {
-  pkgs, ...
-}: {
   packages = with pkgs; [
     python312
     python312Packages.pip
@@ -32,9 +31,11 @@
     python-debug-statements.enable = true;
     commitizen.enable = true;
     black.enable = true;
+    nixfmt-rfc-style.enable = true;
+
     flake8 = {
       enable = true;
-      args = ["--max-line-length=128"];
+      args = [ "--max-line-length=128" ];
     };
     mypy.enable = true;
     autoflake = {
