@@ -1,6 +1,6 @@
 # PersonaFlow
 
-PersonaFlow is a Python library designed for creating and managing AI personas with dynamic memory capabilities. It enables developers to build interactive characters that can maintain context and remember past interactions.
+PersonaFlow is a lightweight Python library designed for creating and managing AI personas with dynamic memory capabilities. It enables developers to build interactive characters that can maintain context and remember past interactions.
 
 ## Installation
 
