@@ -1,15 +1,16 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages  # type: ignore
 
 # Core requirements
 REQUIREMENTS = [
     "torch",
     "transformers>=4.45.0",
     "accelerate",
+    "typing-extensions",
 ]
 
 setup(
     name="personaflow",
-    version="0.1.1",
+    version="0.1.2",
     packages=find_packages(),
     install_requires=REQUIREMENTS,
     author="Zhiyong (Justin) He",

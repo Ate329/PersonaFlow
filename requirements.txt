@@ -11,3 +11,4 @@ black
 mypy
 flake8
 autoflake
+pre-commit

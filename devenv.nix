@@ -13,8 +13,6 @@
     python312Packages.mypy
     python312Packages.flake8
     python312Packages.autoflake
-    python312Packages.execnet
-    python312Packages.coverage
     pre-commit
     git
   ];
