@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from .character import Character
 
 
@@ -53,12 +53,26 @@ class PersonaSystem:
         content: Dict,  # Changed from interaction
         memory_type: str = "broadcast",
         metadata: Optional[Dict] = None,
+        broadcast_to: Optional[List[str]] = None,
+        exclude_characters: Optional[List[str]] = None,
     ):
-        """Broadcast interaction to all characters"""
-        for character in self.characters.values():
-            character.add_memory(
-                content=content, memory_type=memory_type, metadata=metadata
-            )
+        """
+        Broadcast interaction to all characters or specific characters
+        """
+        if broadcast_to is not None:
+            # Broadcast only to specified characters
+            for name, char in self.characters.items():
+                if name in broadcast_to:
+                    char.add_memory(
+                        content=content, memory_type=memory_type, metadata=metadata
+                    )
+        else:
+            # Broadcast to all characters except excluded ones
+            for name, char in self.characters.items():
+                if exclude_characters is None or name not in exclude_characters:
+                    char.add_memory(
+                        content=content, memory_type=memory_type, metadata=metadata
+                    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert system to dictionary"""

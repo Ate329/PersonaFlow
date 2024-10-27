@@ -4,7 +4,7 @@
     python312
     python312Packages.pip
     python312Packages.torch
-    # python312Packages.transformers
+    python312Packages.transformers
     python312Packages.accelerate
     python312Packages.pytest
     python312Packages.pytest-cov
@@ -13,6 +13,8 @@
     python312Packages.mypy
     python312Packages.flake8
     python312Packages.autoflake
+    python312Packages.execnet
+    python312Packages.coverage
     pre-commit
     git
   ];
