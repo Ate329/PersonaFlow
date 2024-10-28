@@ -47,7 +47,8 @@ An example with an embedded LLM implementation is available in [example.py](exam
 
 ### Core Features
 
-#### 1. Character Management
+<details>
+<summary>1. Character Management</summary>
 
 ```python
 # Create a more sophisticated character with full configuration
@@ -87,8 +88,10 @@ context = tech_expert.get_context(
     memory_types=["interaction", "event"]  # Only get specific types of memories
 )
 ```
+</details>
 
-#### 2. Memory Management
+<details>
+<summary>2. Memory Management</summary>
 
 ```python
 # Add a standard interaction memory
@@ -188,8 +191,10 @@ advanced_memory_character.add_memory(
     }
 )
 ```
+</details>
 
-#### 3. Prompt Management
+<details>
+<summary>3. Prompt Management</summary>
 
 ```python
 from personaflow.utils import PromptManager
@@ -248,8 +253,10 @@ technical_answer = prompt_manager.get_prompt(
     """
 )
 ```
+</details>
 
-#### 4. Logging System
+<details>
+<summary>4. Logging System</summary>
 
 ```python
 from personaflow.utils import Logger
@@ -275,8 +282,10 @@ logger.warning("Character memory approaching configured limit (90% full)")
 # Error for serious issues that need attention
 logger.error("Failed to load character state from file: character_backup.json")
 ```
+</details>
 
-#### 5. Serialization
+<details>
+<summary>5. Serialization</summary>
 
 ```python
 from personaflow.utils import Serializer
@@ -314,8 +323,10 @@ Serializer.to_json(
     file_path="memories_backup.json"
 )
 ```
+</details>
 
-#### 6. Input Validation
+<details>
+<summary>6. Input Validation</summary>
 
 ```python
 from personaflow.utils import validators
@@ -367,8 +378,10 @@ else:
     # Configuration has invalid values or missing fields
     logger.error("Invalid memory configuration")
 ```
+</details>
 
-#### 7. Complete System Example
+<details>
+<summary>7. Complete System Example</summary>
 
 ```python
 from personaflow.core import PersonaSystem
@@ -508,3 +521,4 @@ response = process_user_request(
     character_name="TechHelper"
 )
 ```
+</details>
