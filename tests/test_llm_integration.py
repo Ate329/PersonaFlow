@@ -106,7 +106,7 @@ class TestLLMIntegration:
             **context["background"],
             name="Tom",
             context=str(context.get("memories", [])),
-            user_input="How much for that sword?"
+            user_input="How much for that sword?",
         )
 
         response = self.generate_response(llm, formatted_prompt)
@@ -156,7 +156,7 @@ class TestLLMIntegration:
             **context["background"],
             name="John",
             context=str(context.get("memories", [])),
-            user_input=prompts[prompt_type]
+            user_input=prompts[prompt_type],
         )
 
         response = self.generate_response(llm, formatted_prompt)
@@ -199,7 +199,7 @@ class TestLLMIntegration:
             **context["background"],
             name="Mary",
             context=str(context.get("memories", [])),
-            user_input="Tell me more about those dwarven merchants."
+            user_input="Tell me more about those dwarven merchants.",
         )
 
         response = self.generate_response(llm, formatted_prompt)
