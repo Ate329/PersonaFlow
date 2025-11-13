@@ -1,9 +1,11 @@
 # Include the license and readme
 include LICENSE
 include README.md
+include CHANGELOG.md
 
 # Include requirements
 include requirements.txt
+include pyproject.toml
 
 # Include test configuration
 include pytest.ini
