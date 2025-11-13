@@ -1,0 +1,18 @@
+# Include the license and readme
+include LICENSE
+include README.md
+
+# Include requirements
+include requirements.txt
+
+# Include test configuration
+include pytest.ini
+
+# Exclude unnecessary files
+exclude .gitignore
+exclude .envrc
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude tests *
+recursive-exclude .github *
+

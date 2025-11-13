@@ -1,15 +1,53 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
 .venv/
+venv/
+ENV/
+env/
+
+# Testing
 .pytest_cache/
-personaflow.egg-info/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
 model_offload/
 __pycache__/
-.mypy_cache
+.mypy_cache/
+.ruff_cache/
 
+# Nix
 .devenv*
 devenv.local.nix
-
-# direnv
 .direnv
 
-# pre-commit
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Pre-commit
 # .pre-commit-config.yaml

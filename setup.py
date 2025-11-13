@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages  # type: ignore
+from pathlib import Path
 
 # Core requirements
 REQUIREMENTS = [
@@ -8,6 +9,10 @@ REQUIREMENTS = [
     "typing-extensions",
 ]
 
+# Read long description from README
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text(encoding="utf-8")
+
 setup(
     name="personaflow",
     version="0.1.2",
@@ -16,7 +21,7 @@ setup(
     author="Zhiyong (Justin) He",
     author_email="justin.he814@gmail.com",
     description="A lightweight Python library for managing dynamic multi-persona interactions with LLMs.",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Ate329/PersonaFlow",
     classifiers=[
