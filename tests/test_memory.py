@@ -2,16 +2,18 @@ import pytest
 from datetime import datetime
 from personaflow.core.memory import Memory, MemoryConfig, MemoryManager
 
+
 def test_memory_creation():
     memory = Memory(
         timestamp=datetime.now().isoformat(),
         type="interaction",
         content={"user": "Hello", "response": "Hi"},
-        character_name="test_char"
+        character_name="test_char",
     )
     assert memory.type == "interaction"
     assert memory.content["user"] == "Hello"
     assert memory.character_name == "test_char"
+
 
 def test_memory_config():
     config = MemoryConfig()
@@ -20,13 +22,12 @@ def test_memory_config():
     assert config.auto_summarize == True
 
     custom_config = MemoryConfig(
-        max_memories=500,
-        summary_threshold=5,
-        auto_summarize=False
+        max_memories=500, summary_threshold=5, auto_summarize=False
     )
     assert custom_config.max_memories == 500
     assert custom_config.summary_threshold == 5
     assert custom_config.auto_summarize == False
+
 
 class TestMemoryManager:
     @pytest.fixture
@@ -50,10 +51,7 @@ class TestMemoryManager:
         assert len(memories) == 3
 
         # Test memory types
-        memory_manager.add_memory(
-            {"event": "test"},
-            memory_type="event"
-        )
+        memory_manager.add_memory({"event": "test"}, memory_type="event")
         event_memories = memory_manager.get_memories(memory_types=["event"])
         assert len(event_memories) == 1
         assert event_memories[0].type == "event"

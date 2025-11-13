@@ -1,13 +1,14 @@
 import pytest
 from personaflow.core.character import Character
 
+
 class TestCharacter:
     @pytest.fixture
     def character(self):
         return Character(
             name="test_char",
             prompt="You are a test character",
-            background={"role": "test"}
+            background={"role": "test"},
         )
 
     def test_character_creation(self, character):

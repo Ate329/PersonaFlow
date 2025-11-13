@@ -1,12 +1,10 @@
 import logging
 from typing import Optional
 
+
 class Logger:
     def __init__(
-        self,
-        name: str,
-        level: int = logging.INFO,
-        log_file: Optional[str] = None
+        self, name: str, level: int = logging.INFO, log_file: Optional[str] = None
     ):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
@@ -16,7 +14,7 @@ class Logger:
             # Console handler
             console_handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             console_handler.setFormatter(formatter)
             self.logger.addHandler(console_handler)

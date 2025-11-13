@@ -45,7 +45,7 @@ class PersonaSystem:
         """Add interaction to character's memory"""
         if character_name not in self.characters:
             raise KeyError(f"Character {character_name} not found")
-        
+
         character = self.characters[character_name]
         character.add_memory(
             content=content, memory_type=memory_type, metadata=metadata

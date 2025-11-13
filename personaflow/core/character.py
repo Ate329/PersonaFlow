@@ -15,7 +15,7 @@ class Character:
             raise ValueError("Character name cannot be empty")
         if not prompt:
             raise ValueError("Character prompt cannot be empty")
-        
+
         self.name = name
         self.prompt = prompt
         self.background = background or {}
@@ -64,9 +64,9 @@ class Character:
     def from_dict(cls, data: Dict[str, Any]) -> "Character":
         """Create character from dictionary"""
         character = cls(
-            name=data["name"], 
-            prompt=data["prompt"], 
-            background=data.get("background", {})
+            name=data["name"],
+            prompt=data["prompt"],
+            background=data.get("background", {}),
         )
         # Restore memory_manager from dict if present
         if "memory_manager" in data:

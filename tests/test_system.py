@@ -1,6 +1,7 @@
 import pytest
 from personaflow.core.system import PersonaSystem
 
+
 class TestPersonaSystem:
     @pytest.fixture
     def system(self):
@@ -8,9 +9,7 @@ class TestPersonaSystem:
 
     def test_create_character(self, system):
         character = system.create_character(
-            name="test_char",
-            prompt="Test prompt",
-            background={"role": "test"}
+            name="test_char", prompt="Test prompt", background={"role": "test"}
         )
 
         assert "test_char" in system.characters
@@ -41,8 +40,7 @@ class TestPersonaSystem:
         system.create_character(name="test_char", prompt="Test prompt")
 
         system.add_interaction(
-            character_name="test_char",
-            content={"user": "Hello", "response": "Hi"}
+            character_name="test_char", content={"user": "Hello", "response": "Hi"}
         )
 
         character = system.get_character("test_char")
@@ -53,9 +51,7 @@ class TestPersonaSystem:
         system.create_character(name="char1", prompt="Prompt 1")
         system.create_character(name="char2", prompt="Prompt 2")
 
-        system.broadcast_interaction(
-            content={"event": "Global event"}
-        )
+        system.broadcast_interaction(content={"event": "Global event"})
 
         for char_name in ["char1", "char2"]:
             character = system.get_character(char_name)
@@ -66,8 +62,7 @@ class TestPersonaSystem:
     def test_serialization(self, system):
         system.create_character(name="test_char", prompt="Test prompt")
         system.add_interaction(
-            character_name="test_char",
-            content={"user": "Hello", "response": "Hi"}
+            character_name="test_char", content={"user": "Hello", "response": "Hi"}
         )
 
         data = system.to_dict()
