@@ -14,29 +14,28 @@ def validate_memory_content(content: Dict[str, Any]) -> bool:
     """Validate memory content structure and types"""
     if not isinstance(content, dict):
         return False
-
-    required_fields = {
-        'user': str,
-        'response': str
-    }
-
-    return all(
-        field in content and isinstance(content[field], field_type)
-        for field, field_type in required_fields.items()
-    )
+    
+    # Memory content just needs to be a non-empty dictionary
+    # Different memory types can have different structures
+    return len(content) > 0
 
 def validate_memory_config(config: Dict[str, Any]) -> bool:
     """Validate memory configuration structure and types"""
     if not isinstance(config, dict):
         return False
 
-    required_fields = {
+    # Define valid fields and their types
+    valid_fields = {
         'max_memories': int,
         'summary_threshold': int,
         'auto_summarize': bool
     }
 
-    return all(
-        field in config and isinstance(config[field], field_type)
-        for field, field_type in required_fields.items()
-    )
+    # Check that all provided fields are valid and have correct types
+    for field, value in config.items():
+        if field not in valid_fields:
+            return False
+        if not isinstance(value, valid_fields[field]):
+            return False
+    
+    return True

@@ -9,7 +9,7 @@ class Serializer:
         try:
             with open(file_path, 'w') as f:
                 json.dump(data, f, indent=2)
-        except (IOError, json.JSONDecodeError) as e:
+        except (IOError, TypeError) as e:
             raise IOError(f"Failed to serialize data to {file_path}: {str(e)}")
 
     @staticmethod

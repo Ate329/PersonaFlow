@@ -18,6 +18,10 @@ class PromptManager:
 
     def add_template(self, name: str, template: str):
         """Add a new template"""
+        if not name or not name.strip():
+            raise ValueError("Template name cannot be empty")
+        if not template or not template.strip():
+            raise ValueError("Template content cannot be empty")
         if not validate_prompt_template(template):
             raise ValueError(f"Invalid template syntax: {template}")
         self.templates[name] = PromptTemplate(template)

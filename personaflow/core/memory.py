@@ -24,8 +24,18 @@ class MemoryManager:
         character_name: str,
         config: Optional[Dict[str, Any]] = None
     ):
+        if not character_name or not character_name.strip():
+            raise ValueError("Character name cannot be empty")
+        
         self.character_name = character_name
         self.config = MemoryConfig(**config) if config else MemoryConfig()
+        
+        # Validate config values
+        if self.config.max_memories <= 0:
+            raise ValueError("max_memories must be greater than 0")
+        if self.config.summary_threshold <= 0:
+            raise ValueError("summary_threshold must be greater than 0")
+        
         self.memories: List[Memory] = []
         self.summarized_memories: List[Memory] = []
         self._last_accessed = datetime.now()
@@ -53,6 +63,9 @@ class MemoryManager:
         memory_types: Optional[List[str]] = None
     ) -> List[Memory]:
         """Get relevant memories based on configuration"""
+        if limit is not None and limit < 0:
+            raise ValueError("Memory limit cannot be negative")
+        
         memories = self.memories
 
         if memory_types:
@@ -75,17 +88,20 @@ class MemoryManager:
     def _summarize_old_memories(self):
         """Summarize old memories to maintain important information"""
         memories_to_summarize = self.memories[:-self.config.max_memories]
-        summary = Memory(
-            timestamp=datetime.now().isoformat(),
-            type="summary",
-            content={
-                "period": f"{memories_to_summarize[0].timestamp} to {memories_to_summarize[-1].timestamp}",
-                "summary": f"Summary of {len(memories_to_summarize)} memories"
-            },
-            character_name=self.character_name
-        )
-
-        self.summarized_memories.append(summary)
+        
+        # Only create summary if there are memories to summarize
+        if memories_to_summarize:
+            summary = Memory(
+                timestamp=datetime.now().isoformat(),
+                type="summary",
+                content={
+                    "period": f"{memories_to_summarize[0].timestamp} to {memories_to_summarize[-1].timestamp}",
+                    "summary": f"Summary of {len(memories_to_summarize)} memories"
+                },
+                character_name=self.character_name
+            )
+            self.summarized_memories.append(summary)
+        
         self.memories = self.memories[-self.config.max_memories:]
 
     def to_dict(self) -> Dict[str, Any]:

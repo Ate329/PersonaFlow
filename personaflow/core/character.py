@@ -11,6 +11,11 @@ class Character:
         background: Optional[Dict[str, Any]] = None,
         memory_config: Optional[Dict[str, Any]] = None,
     ):
+        if not name or not name.strip():
+            raise ValueError("Character name cannot be empty")
+        if not prompt:
+            raise ValueError("Character prompt cannot be empty")
+        
         self.name = name
         self.prompt = prompt
         self.background = background or {}
@@ -59,7 +64,11 @@ class Character:
     def from_dict(cls, data: Dict[str, Any]) -> "Character":
         """Create character from dictionary"""
         character = cls(
-            name=data["name"], prompt=data["prompt"], background=data["background"]
+            name=data["name"], 
+            prompt=data["prompt"], 
+            background=data.get("background", {})
         )
-        character.memory_manager = MemoryManager.from_dict(data["memory_manager"])
+        # Restore memory_manager from dict if present
+        if "memory_manager" in data:
+            character.memory_manager = MemoryManager.from_dict(data["memory_manager"])
         return character
