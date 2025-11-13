@@ -43,7 +43,7 @@ print(context)
 ```
 
 ## Examples
-An example with an embedded LLM implementation is available in [example.py](example.py).
+An example with an embedded LLM implementation is available in [example.py](https://github.com/Ate329/PersonaFlow/blob/main/example.py).
 
 ### Core Features
 
@@ -525,4 +525,4 @@ response = process_user_request(
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/Ate329/PersonaFlow/blob/main/LICENSE) file for details.
